@@ -2,6 +2,9 @@
 #include <cstring>
 #include <iostream>
 #include <mutex>
+#include <vector>
+#include <future>
+#include <algorithm>
 
 size_t defineCap(size_t);
 
@@ -87,6 +90,47 @@ size_t String::find(const char *pSubStr) const
       	      		return i;
       		}	
 	}
+	return std::string::npos;
+}
+
+size_t String::findany(const char& c, size_t threadCount) const
+{
+	const size_t range_length = m_size / threadCount;
+	std::vector<std::future<size_t>> futures;
+
+	for (size_t i = 0; i < threadCount - 1; ++i) {
+	        char* st = m_buf + i * range_length;
+	        char* end = st + range_length;
+
+	        futures.push_back(std::async(std::launch::async, [st, end, c]() {
+			char* result = std::find(st, end, c);
+                        return (result != end) ? std::distance(st, result) : std::string::npos;
+        	}));
+    	}
+
+	char* lastst = m_buf + (threadCount - 1) * range_length;
+	char* lastend = m_buf + m_size;	
+	futures.push_back(std::async(std::launch::async, [lastst, lastend, c]() {
+        	char* result = std::find(lastst, lastend, c);
+        	return (result != lastend) ? std::distance(lastst, result) : std::string::npos;
+    	}));
+    	
+	//for (auto& future : futures) {
+	//	size_t result = future.get();
+        //	if (result != std::string::npos) {
+        //		return result;
+        //	}
+    	//}
+ 	size_t fSize = futures.size();
+ 	if (fSize != 0) {
+    		std::vector<size_t> allfound;   	
+    		allfound.reserve(fSize); 
+	    	for (auto& future : futures) {
+  		      	allfound.push_back(future.get());
+    		}
+    		auto minindex = std::min_element(allfound.begin(), allfound.end());
+ 		return *minindex;
+ 	} 
 	return std::string::npos;
 }
 

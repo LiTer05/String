@@ -22,6 +22,8 @@ public:
 	size_t size() const;	
 	bool empty() const;
 	size_t find(const char *pSubStr) const; 
+	size_t findany(const char& c, size_t threadCount) const;
+
 	char operator[](size_t index) const;
 	bool operator<(const char* pStr) const;
 	///// Accessors /////
@@ -29,6 +31,7 @@ public:
 	///// Modifiers /////
 	void append(const char *pStr);
 	void swap(String& other);
+	
 	String& operator=(const String& other);
 	String& operator=(String&& other);
 	///// Modifiers /////
