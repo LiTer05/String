@@ -1,9 +1,8 @@
 #pragma once
 
-//TODO:: Write doxigen comments
+//TBD:: Write doxigen comments
 #include <iostream>
 #include <shared_mutex>
-size_t defineCap(size_t size);
 
 class String {
 	// TBD: define iterators instead if have time...
@@ -23,7 +22,8 @@ public:
 	size_t size() const;	
 	bool empty() const;
 	size_t find(const char *pSubStr) const; 
-	char operator[](size_t) const;
+	char operator[](size_t index) const;
+	bool operator<(const char* pStr) const;
 	///// Accessors /////
 	
 	///// Modifiers /////
