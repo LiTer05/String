@@ -42,6 +42,7 @@ String::String(String&& other)
 String::~String()
 {
 	m_alloc.deallocate(m_buf, m_cap);
+	m_buf = nullptr;
 	m_size = 0;
 	m_cap = 0;
 }
@@ -91,7 +92,11 @@ char String::operator[](size_t index) const
 	std::shared_lock<std::shared_timed_mutex> lock(m_mutex);
 	return m_buf[index];
 }
-
+bool String::operator<(const char* pStr) const
+{
+	std::shared_lock<std::shared_timed_mutex> lock(m_mutex);
+	return std::strcmp(m_buf,pStr) < 0;
+}
 ///// Accessors End /////
 
 ///// Modifiers /////
