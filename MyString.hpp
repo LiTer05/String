@@ -32,14 +32,6 @@ public:
 	String& operator=(const String& other);
 	String& operator=(String&& other);
 	///// Modifiers /////
-	
-
-//	void clear(); 
-//	String operator+=(const String);
-//	void insert(String);
-//	void erase(String);
-//	void replace(int index, char character);
-//	bool compare(String);
 
 private:
 	char* m_buf = nullptr;
