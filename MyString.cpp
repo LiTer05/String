@@ -3,6 +3,8 @@
 #include <iostream>
 #include <mutex>
 
+size_t defineCap(size_t);
+
 // Constructors and destructors
 String::String(const char* pStr)
 	: m_size(strlen(pStr))
@@ -21,10 +23,12 @@ String::String(const char* pStr,size_t length)
 	strncpy(m_buf,pStr,m_size);	
 }
 
-String::String(const String& other) 
-	: m_cap (other.m_cap)
-	, m_size (other.m_size)  
+String::String(const String& other)  
 {
+	std::unique_lock<std::shared_timed_mutex> lock(other.m_mutex);	
+	m_cap = other.m_cap;
+	m_size = other.m_size; 
+
 	if (m_cap == 0) {
 		m_buf = nullptr;
 	} else {
@@ -41,6 +45,7 @@ String::String(String&& other)
 
 String::~String()
 {
+	std::unique_lock<std::shared_timed_mutex> lock(m_mutex);	
 	m_alloc.deallocate(m_buf, m_cap);
 	m_buf = nullptr;
 	m_size = 0;
@@ -68,7 +73,6 @@ bool String::empty() const
 
 size_t String::find(const char *pSubStr) const 		
 {
-
 	std::shared_lock<std::shared_timed_mutex> lock(m_mutex);
 	size_t sublen = strlen(pSubStr);
 	for (size_t i = 0; i <= m_size - sublen; ++i) {
@@ -84,7 +88,6 @@ size_t String::find(const char *pSubStr) const
       		}	
 	}
 	return std::string::npos;
-
 }
 
 char String::operator[](size_t index) const			
@@ -102,7 +105,13 @@ bool String::operator<(const char* pStr) const
 ///// Modifiers /////
 void String::swap(String& other)
 {
-	std::unique_lock<std::shared_timed_mutex> lock(m_mutex);	
+	if (this == &other) return; 
+	
+	std::shared_lock<std::shared_timed_mutex> my_lock(m_mutex, std::defer_lock);	
+	std::shared_lock<std::shared_timed_mutex> other_lock(other.m_mutex, std::defer_lock);	
+
+	std::lock(my_lock,other_lock);
+	
 	std::swap(m_cap,other.m_cap);
 	std::swap(m_size,other.m_size);
 	std::swap(m_buf,other.m_buf);
@@ -155,8 +164,8 @@ void String::append(const char *pStr)
 ///// Friend /////
 std::ostream& operator<<(std::ostream& os, const String& s) 
 {
-	std::shared_lock<std::shared_timed_mutex> lock(m_mutex);
-	for (size_t i = 0; i < m_size; ++i)
+	std::shared_lock<std::shared_timed_mutex> lock(s.m_mutex);
+	for (size_t i = 0; i < s.m_size; ++i)
 		os << s[i];
 	return os;
 }
