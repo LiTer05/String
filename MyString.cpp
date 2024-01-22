@@ -110,7 +110,7 @@ void String::swap(String& other)
 
 String& String::operator=(const String& other)		
 {
-	//std::unique_lock<std::shared_timed_mutex> lock(m_mutex);	
+	// swap is threadsafe
 	if (this != &other) {
 		String tmp(other);
 		swap(tmp);
@@ -120,7 +120,7 @@ String& String::operator=(const String& other)
 
 String& String::operator=(String&& other)		
 {
-	//std::unique_lock<std::shared_timed_mutex> lock(m_mutex);	
+	// swap is threadsafe	
 	if (this != &other) {
 		swap(other);
 		String tmp;
@@ -152,7 +152,16 @@ void String::append(const char *pStr)
 }
 ///// Modifiers End /////
 
+///// Friend /////
+std::ostream& operator<<(std::ostream& os, const String& s) 
+{
+	std::shared_lock<std::shared_timed_mutex> lock(m_mutex);
+	for (size_t i = 0; i < m_size; ++i)
+		os << s[i];
+	return os;
+}
 
+//////////////////
 size_t defineCap(size_t size)
 {
     	if ((size & (size - 1)) == 0) {
@@ -162,10 +171,4 @@ size_t defineCap(size_t size)
   		size = size & (size - 1);
 	}
 	return size << 1;
-}
-
-std::ostream& operator<<(std::ostream& os, const String& s) 
-{
-	os << s.m_buf;
-	return os;
 }
